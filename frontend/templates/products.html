@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Products{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title">📦 <span>Product</span> Management</h2>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Search by name or SKU" onkeyup="loadProducts()">
+    
+    <select id="categoryFilter" onchange="loadProducts()"></select>
+    
+    <button class="selll" onclick="toggleForm()">➕ Add Product</button>
+</div>
+
+<!-- ================= ADD PRODUCT MODAL ================= -->
+<div id="productForm" class="modal">
+    <div class="modal-content">
+
+        <h3>Add Product</h3>
+
+        <input type="text" id="name" placeholder="Product Name">
+        <input type="text" id="sku" placeholder="SKU Code">
+        <input type="text" id="category" placeholder="Category">
+        <input type="number" id="stock" placeholder="Stock Quantity">
+        <input type="number" id="price" placeholder="Price">
+
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="sell" onclick="addProduct()">💾 Save</button>
+            <button class="delete" onclick="toggleForm()">❌ Close</button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= TABLE ================= -->
+<div class="table-container">
+<table id="productTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>SKU</th>
+            <th>Category</th>
+            <th>Stock</th>
+            <th>Status</th>
+            <th>Price</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+    
+</table>
+
+
+</div>
+
+</div>
+
+
+<!-- ================= EDIT MODAL ================= -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+
+        <h3>✏ Edit Product</h3>
+
+        <input type="text" id="editName" placeholder="Name">
+        <input type="text" id="editSku" placeholder="SKU">
+        <input type="text" id="editCategory" placeholder="Category">
+        <input type="number" id="editStock" placeholder="Stock">
+        <input type="number" id="editPrice" placeholder="Price">
+
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="edit" onclick="saveEdit()">💾 Save</button>
+            <button class="delete" onclick="closeModal()">❌ Cancel</button>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- FONT AWESOME ICONS -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <title>{% block title %}{% endblock %}</title>
+</head>
+
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+
+<div class="sidebar">
+
+    <h2>Inventory</h2>
+
+    <button onclick="window.location.href='/dashboard'">
+        <i class="fa-solid fa-house"></i> Dashboard
+    </button>
+
+    <button onclick="window.location.href='/api/products_page'">
+        <i class="fa-solid fa-box"></i> Products
+    </button>
+
+    <button onclick="window.location.href='/api/orders_page'">
+        <i class="fa-solid fa-cart-shopping"></i> Orders
+    </button>
+
+    <button onclick="window.location.href='/api/users_page'">
+        <i class="fa-solid fa-users"></i> Users
+    </button>
+
+    <button onclick="window.location.href='/api/suppliers_page'">
+        <i class="fa-solid fa-truck"></i> Suppliers
+    </button>
+
+    <button onclick="window.location.href='/api/sales_page'">
+        <i class="fa-solid fa-money-bill"></i> Sales
+    </button>
+
+    <button onclick="window.location.href='/api/reports_page'">
+        <i class="fa-solid fa-chart-line"></i> Reports
+    </button>
+
+    <button class="logout-btn" onclick="window.location.href='/login'">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span class="logout-text">Logout</span>
+    </button>
+
+</div>
+
+<!-- ===== PROFILE MODAL ===== -->
+
+<div id="profileModal" class="modal">
+
+    <div class="modal-content">
+
+        <button class="close-btn" onclick="closeProfileModal()">×</button>
+
+        <h3>Edit Profile</h3>
+
+        <input type="text" placeholder="Username">
+        <input type="password" placeholder="Password">
+        <input type="file">
+
+        <button class="edit">Save Changes</button>
+
+    </div>
+
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+
+<div class="main">
+    {% block content %}{% endblock %}
+</div>
+
+{% block scripts %}
+
+<script>
+
+function openProfileModal(){
+    document.getElementById("profileModal").classList.add("active");
+}
+
+function closeProfileModal(){
+    document.getElementById("profileModal").classList.remove("active");
+}
+
+function handleProfileKey(e){
+    if(e.key === "Enter" || e.key === " "){
+        openProfileModal();
+    }
+}
+
+</script>
+
+{% endblock %}
+
+</body>
+</html>

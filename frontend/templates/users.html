@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Users Management{% endblock %}
+
+{% block content %}
+
+<h2>User Management</h2>
+
+<div class="card">
+    <h3>Create User</h3>
+
+    <input type="text" id="name" placeholder="Name">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+
+    <select id="role">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+    </select>
+
+    <button onclick="createUser()">Create</button>
+</div>
+
+<div class="card">
+    <h3>All Users</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody id="userTable"></tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+async function loadUsers() {
+    const res = await fetch('/api/users');
+    const data = await res.json();
+
+    let rows = '';
+
+    data.forEach(u => {
+        rows += `
+            <tr>
+                <td>${u.id}</td>
+                <td>${u.name}</td>
+                <td>${u.email}</td>
+                <td>${u.role}</td>
+                <td>
+                    <button class="delete-btn" onclick="deleteUser(${u.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('userTable').innerHTML = rows;
+}
+
+
+async function createUser() {
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const role = document.getElementById('role').value;
+
+    if (!name || !email || !password) {
+        alert("All fields required");
+        return;
+    }
+
+    const res = await fetch('/api/create_user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role })
+    });
+
+    const data = await res.json();
+
+    alert(data.message || data.error);
+
+    document.getElementById('name').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+
+    loadUsers();
+}
+
+
+async function deleteUser(id) {
+    if (!confirm("Delete this user?")) return;
+
+    const res = await fetch(`/api/delete_user/${id}`, {
+        method: 'DELETE'
+    });
+
+    const data = await res.json();
+
+    alert(data.message || data.error);
+
+    loadUsers();
+}
+
+loadUsers();
+
+</script>
+{% endblock %}

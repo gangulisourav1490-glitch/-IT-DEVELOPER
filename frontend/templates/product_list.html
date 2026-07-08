@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Product List{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title">📦 Product List</h2>
+
+<div class="table-container">
+<table id="productTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>SKU</th>
+            <th>Category</th>
+            <th>Stock</th>
+             <th>Status</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/dashboard.js"></script>
+<script>
+    loadProducts(); // full list load karega
+</script>
+{% endblock %}

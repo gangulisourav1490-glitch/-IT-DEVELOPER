@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Suppliers{% endblock %}
+
+{% block content %}
+
+<style>
+
+/* MAIN LAYOUT */
+.row {
+    display: flex;
+    gap: 20px;
+}
+
+/* LEFT → Add Supplier (THIN) */
+.col:first-child {
+    flex: 0 0 20%;
+    max-width: 20%;
+}
+
+/* RIGHT → All Suppliers (WIDE) */
+.col:last-child {
+    flex: 0 0 80%;
+    max-width: 80%;
+}
+
+/* SAME HEIGHT */
+.card {
+    min-height: 420px;
+}
+
+/* RIGHT SIDE SCROLL */
+.col:last-child .card {
+    overflow: auto;
+}
+
+/* FORM */
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+/* FIX TEXT BREAK */
+td {
+    word-break: break-word;
+}
+
+</style>
+
+<h2>Suppliers Management</h2>
+
+<div class="row">
+
+    <!-- LEFT -->
+    <div class="col">
+        <div class="card">
+            <h3>Add Supplier</h3>
+
+            <div class="form-group">
+                <input type="text" id="name" placeholder="Name">
+                <input type="text" id="phone" placeholder="Phone">
+                <input type="email" id="email" placeholder="Email">
+                <input type="text" id="address" placeholder="Address">
+
+                <button onclick="createSupplier()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col">
+        <div class="card">
+            <h3>All Suppliers</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="supplierTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+async function loadSuppliers() {
+    const res = await fetch('/api/get_suppliers');
+    const data = await res.json();
+
+    let rows = '';
+
+    data.forEach(s => {
+        rows += `
+            <tr>
+                <td>${s.id}</td>
+                <td>${s.name}</td>
+                <td>${s.phone || ''}</td>
+                <td>${s.email || ''}</td>
+                <td>${s.address || ''}</td>
+                <td>
+                    <button onclick="deleteSupplier(${s.id})" style="background:red;">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById("supplierTable").innerHTML = rows;
+}
+
+async function createSupplier() {
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const address = document.getElementById("address").value.trim();
+
+    if (!name) {
+        alert("Name required");
+        return;
+    }
+
+    const res = await fetch('/api/create_supplier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, email, address })
+    });
+
+    const data = await res.json();
+
+    alert(data.message || data.error);
+
+    document.getElementById("name").value = '';
+    document.getElementById("phone").value = '';
+    document.getElementById("email").value = '';
+    document.getElementById("address").value = '';
+
+    loadSuppliers();
+}
+
+async function deleteSupplier(id) {
+    if (!confirm("Delete supplier?")) return;
+
+    const res = await fetch(`/api/delete_supplier/${id}`, {
+        method: 'DELETE'
+    });
+
+    const data = await res.json();
+
+    alert(data.message || data.error);
+
+    loadSuppliers();
+}
+
+loadSuppliers();
+
+</script>
+{% endblock %}

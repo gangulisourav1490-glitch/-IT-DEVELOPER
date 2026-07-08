@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+
+<h1 class="report-title">
+Reports Dashboard
+</h1>
+
+<p class="report-subtitle">
+Sales, inventory and stock insights
+</p>
+
+
+
+<!-- SUMMARY -->
+<div class="stats-grid">
+
+<div class="stat-card">
+<h4>Total Sales</h4>
+<h2 id="salesValue">₹0</h2>
+<span>Live Revenue</span>
+</div>
+
+<div class="stat-card">
+<h4>Total Orders</h4>
+<h2 id="ordersValue">0</h2>
+<span>Processed Orders</span>
+</div>
+
+<div class="stat-card">
+<h4>Total Products</h4>
+<h2 id="productsValue">0</h2>
+<span>Inventory Count</span>
+</div>
+
+<div class="stat-card">
+<h4>Low Stock</h4>
+<h2 id="lowValue">0</h2>
+<span>Needs Attention</span>
+</div>
+
+</div>
+
+
+
+
+<div class="report-row">
+
+<!-- SALES GRAPH -->
+<div class="report-card">
+
+<div class="section-header">
+
+<h3>Daily Sales Report</h3>
+
+<div class="chart-filters">
+
+<button
+class="filter-btn"
+id="btn7"
+onclick="setFilter('7')">
+7D
+</button>
+
+<button
+class="filter-btn"
+id="btn30"
+onclick="setFilter('30')">
+30D
+</button>
+
+<button
+class="filter-btn active"
+id="btnall"
+onclick="setFilter('all')">
+All
+</button>
+
+</div>
+
+</div>
+
+
+<div class="chart-box">
+<canvas id="salesChart"></canvas>
+</div>
+
+</div>
+
+
+
+
+<!-- TOP PRODUCTS -->
+<div class="report-card">
+
+<div class="section-header">
+<h3>Top Products</h3>
+</div>
+
+<div id="topProductsList"
+class="top-products-list">
+</div>
+
+</div>
+
+</div>
+
+
+
+
+<!-- LOW STOCK -->
+<div class="report-card">
+
+<div class="section-header">
+<h3>Low Stock Alerts</h3>
+</div>
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+<tr>
+<th>Product</th>
+<th>SKU</th>
+<th>Stock</th>
+<th>Category</th>
+</tr>
+</thead>
+
+<tbody id="lowStockTable">
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+
+
+<!-- EXPORT -->
+<div class="report-card export-box">
+
+<h3>Export Reports</h3>
+
+<div class="export-actions">
+
+<button class="export-btn csv-btn"
+onclick="window.location.href='/api/reports/export/csv'">
+
+<span class="export-icon">📄</span>
+<span>Download CSV</span>
+
+</button>
+
+
+<button class="export-btn pdf-btn"
+onclick="window.location.href='/api/reports/export/pdf'">
+
+<span class="export-icon">📕</span>
+<span>Download PDF</span>
+
+</button>
+
+</div>
+
+</div>
+
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+let salesChart;
+
+
+
+function setFilter(range){
+
+document
+.querySelectorAll('.filter-btn')
+.forEach(btn=>{
+btn.classList.remove('active');
+});
+
+document.getElementById(
+'btn'+range
+).classList.add('active');
+
+loadReports(range);
+
+}
+
+
+
+function renderChart(labels,values){
+
+const ctx=
+document.getElementById(
+"salesChart"
+);
+
+if(salesChart){
+salesChart.destroy();
+}
+
+salesChart=
+new Chart(ctx,{
+
+type:"line",
+
+data:{
+labels:labels,
+
+datasets:[{
+
+label:"Sales",
+
+data:values,
+
+borderColor:"#2563eb",
+
+backgroundColor:
+"rgba(59,130,246,.18)",
+
+borderWidth:4,
+
+fill:true,
+
+tension:.45,
+
+pointRadius:5,
+pointHoverRadius:7
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+maintainAspectRatio:false,
+
+plugins:{
+legend:{
+display:false
+}
+},
+
+interaction:{
+mode:"index",
+intersect:false
+},
+
+scales:{
+
+x:{
+grid:{
+display:false
+}
+},
+
+y:{
+beginAtZero:true,
+grid:{
+drawBorder:false
+}
+}
+
+}
+
+}
+
+});
+
+}
+
+
+
+
+
+async function loadReports(range='all'){
+
+
+/* SUMMARY */
+const res1=
+await fetch('/api/reports');
+
+const summary=
+await res1.json();
+
+document.getElementById(
+"salesValue"
+).innerText=
+"₹"+summary.total_sales;
+
+document.getElementById(
+"ordersValue"
+).innerText=
+summary.total_orders;
+
+document.getElementById(
+"productsValue"
+).innerText=
+summary.total_products;
+
+document.getElementById(
+"lowValue"
+).innerText=
+summary.low_stock || 0;
+
+
+
+
+/* DAILY GRAPH */
+const res2=
+await fetch('/api/reports/daily');
+
+const daily=
+await res2.json();
+
+
+let labels=[];
+let values=[];
+
+
+let filtered=daily;
+
+if(range==='7'){
+filtered=daily.slice(-7);
+}
+
+if(range==='30'){
+filtered=daily.slice(-30);
+}
+
+
+filtered.forEach(d=>{
+
+labels.push(d.date);
+values.push(d.total);
+
+});
+
+
+renderChart(labels,values);
+
+
+
+
+/* TOP PRODUCTS */
+const res3=
+await fetch(
+'/api/reports/top-products'
+);
+
+const top=
+await res3.json();
+
+
+let maxQty=
+Math.max(
+...top.map(x=>x.quantity),
+1
+);
+
+
+let rows='';
+
+
+top.forEach((p,index)=>{
+
+let percent=
+(p.quantity/maxQty)*100;
+
+
+rows += `
+
+<div class="product-rank">
+
+<div class="rank-badge">
+${index+1}
+</div>
+
+
+<div class="product-info">
+
+<h4>
+${p.product}
+</h4>
+
+
+<div class="progress-wrap">
+
+<div
+class="progress-bar"
+style="width:${percent}%;">
+</div>
+
+</div>
+
+<span>
+${p.quantity} sold
+</span>
+
+</div>
+
+</div>
+
+`;
+
+});
+
+
+document.getElementById(
+"topProductsList"
+).innerHTML=rows;
+
+
+}
+
+
+
+
+
+async function loadLowStock(){
+
+const res=
+await fetch(
+'/api/reports/low-stock'
+);
+
+const data=
+await res.json();
+
+let rows='';
+
+
+data.forEach(p=>{
+
+rows += `
+<tr>
+
+<td>${p.name}</td>
+
+<td>${p.sku}</td>
+
+<td style="
+color:red;
+font-weight:bold;
+">
+${p.stock}
+</td>
+
+<td>
+${p.category}
+</td>
+
+</tr>
+`;
+
+});
+
+
+document.getElementById(
+"lowStockTable"
+).innerHTML=rows;
+
+
+}
+
+
+
+loadReports();
+loadLowStock();
+
+</script>
+
+{% endblock %}

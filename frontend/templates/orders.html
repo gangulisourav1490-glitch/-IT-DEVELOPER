@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Orders (Purchase)</h2>
+
+<div class="row">
+
+    <!-- ADD ORDER -->
+    <div class="col">
+        <div class="card">
+            <h3>Create Order</h3>
+
+            <!-- ✅ PRODUCT DROPDOWN -->
+            <label>Select Product</label>
+            <select id="product_id">
+                <option value="">Select Product</option>
+            </select>
+
+            <!-- ✅ SUPPLIER DROPDOWN -->
+            <label>Select Supplier</label>
+            <select id="supplier_id">
+                <option value="">Select Supplier</option>
+            </select>
+
+            <input type="number" id="quantity" placeholder="Quantity">
+
+            <button onclick="createOrder()">Order</button>
+        </div>
+    </div>
+
+    <!-- LIST -->
+    <div class="col">
+        <div class="card">
+            <h3>All Orders</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Product</th>
+                        <th>Supplier</th>
+                        <th>Qty</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+
+                <tbody id="orderTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+// 🔥 LOAD PRODUCTS
+async function loadProducts() {
+    const res = await fetch('/api/get_products');
+    const data = await res.json();
+
+    let dropdown = document.getElementById("product_id");
+
+    data.forEach(p => {
+        let option = document.createElement("option");
+        option.value = p.id;
+        option.text = p.name + " (PRD-" + p.id + ")";
+        dropdown.appendChild(option);
+    });
+}
+
+// 🔥 LOAD SUPPLIERS
+async function loadSuppliers() {
+    const res = await fetch('/api/get_suppliers');
+    const data = await res.json();
+
+    let dropdown = document.getElementById("supplier_id");
+
+    data.forEach(s => {
+        let option = document.createElement("option");
+        option.value = s.id;
+        option.text = s.name;
+        dropdown.appendChild(option);
+    });
+}
+
+// 🔥 LOAD ORDERS
+async function loadOrders() {
+    const res = await fetch('/api/get_orders');
+    const data = await res.json();
+
+    let rows = '';
+
+    data.forEach(o => {
+        rows += `
+        <tr>
+            <td>${o.id}</td>
+            <td>${o.product_id}</td>
+            <td>${o.supplier_id}</td>
+            <td>${o.quantity}</td>
+            <td>${o.date}</td>
+        </tr>
+        `;
+    });
+
+    document.getElementById("orderTable").innerHTML = rows;
+}
+
+// 🔥 CREATE ORDER
+async function createOrder() {
+    const product_id = document.getElementById("product_id").value;
+    const supplier_id = document.getElementById("supplier_id").value;
+    const quantity = document.getElementById("quantity").value;
+
+    if (!product_id || !supplier_id || !quantity) {
+        alert("Fill all fields");
+        return;
+    }
+
+    const res = await fetch('/api/create_order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id, supplier_id, quantity })
+    });
+
+    const data = await res.json();
+    alert(data.message || data.error);
+
+    loadOrders();
+}
+
+// 🔥 LOAD ALL
+loadProducts();
+loadSuppliers();
+loadOrders();
+
+</script>
+{% endblock %}
